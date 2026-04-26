@@ -27,18 +27,19 @@ On top of the original repository, we add support to monocular videos and provid
 git clone git@github.com:ShenhanQian/VHAP.git
 cd VHAP
 
-conda create --name VHAP -y python=3.10
+conda create --name VHAP -y python=3.11
 conda activate VHAP
 
 # Install CUDA and ninja for compilation
-conda install -c "nvidia/label/cuda-12.1.1" cuda-toolkit ninja cmake  # use the right CUDA version
+conda install -c "nvidia/label/cuda-12.8.1" cuda-toolkit ninja cmake
 ln -s "$CONDA_PREFIX/lib" "$CONDA_PREFIX/lib64"  # to avoid error "/usr/bin/ld: cannot find -lcudart"
 conda env config vars set CUDA_HOME=$CONDA_PREFIX  # for compilation
+conda env config vars set TORCH_CUDA_ARCH_LIST="12.0"  # RTX 5090 / sm_120
 
 # Install PyTorch (make sure that the CUDA version matches with "Step 1")
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install torch==2.9.* torchvision==0.24.* --index-url https://download.pytorch.org/whl/cu128
 # or
-conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia
+conda install pytorch torchvision pytorch-cuda=12.8 -c pytorch -c nvidia
 # make sure torch.cuda.is_available() returns True
 
 pip install -e .
@@ -50,6 +51,7 @@ pip install -e .
 >    pip install nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@backface-culling --force-reinstall
 >    rm -r ~/.cache/torch_extensions/*/nvdiffrast*
 >    ```
+> - For RTX 5090 / CUDA 12.8 environments, install PyTorch from the `cu128` index before `pip install -e .`. This branch removes the runtime dependency on PyTorch3D and uses `chumpy-fork==0.71` with `numpy==2.2.6`.
 > - We use [STAR](https://github.com/ShenhanQian/STAR/) for landmark detection by default. Alterntively, [face-alignment](https://github.com/1adrianb/face-alignment) is faster but less accurate.
 
 ## Download

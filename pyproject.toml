@@ -11,21 +11,21 @@ include = ["vhap/**/*.py"]
 [project]
 name = "VHAP"
 version = "0.1.0"
-requires-python = ">=3.9"
+requires-python = ">=3.11,<3.12"
 dependencies = [
-  "tyro",
+    "tyro",
     "pyyaml",
-    "numpy==1.22.3",
-    "matplotlib==3.8.0",
+    "numpy==2.2.6",
+    "matplotlib>=3.10,<3.11",
     "scipy",
     "pillow",
     "opencv-python",
     "ffmpeg-python",
     "colour-science",
-    "torch",  # manually install to avoid CUDA version mismatch
-    "torchvision",  # manually install to avoid CUDA version mismatch
+    "torch>=2.9,<2.10",  # install from the CUDA 12.8 PyTorch index
+    "torchvision>=0.24,<0.25",  # install from the CUDA 12.8 PyTorch index
     "tensorboard",
-    "chumpy",
+    "chumpy-fork==0.71",
     "trimesh",
     "nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@backface-culling",
     "BackgroundMattingV2@git+https://github.com/ShenhanQian/BackgroundMattingV2",
@@ -34,7 +34,6 @@ dependencies = [
     "pandas",  # for STAR
     "gdown",  # for STAR
     "face-alignment",
-    "pytorch3d@git+https://github.com/facebookresearch/pytorch3d.git",
     "dearpygui",
     "joblib"
 ]

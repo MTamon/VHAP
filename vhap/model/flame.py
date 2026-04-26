@@ -18,10 +18,8 @@
 
 
 from vhap.model.lbs import lbs, vertices2landmarks, blend_shapes, vertices2joints
-from vhap.util.mesh import face_vertices
+from vhap.util.mesh import face_vertices, load_obj_mesh, uniform_laplacian
 from vhap.util.log import get_logger
-from pytorch3d.io import load_obj
-from pytorch3d.structures.meshes import Meshes
 from matplotlib import cm
 
 import torch
@@ -146,7 +144,7 @@ class FlameHead(nn.Module):
         self.register_buffer("neck_kin_chain", torch.stack(neck_kin_chain))
 
         # add faces and uvs
-        verts, faces, aux = load_obj(flame_template_mesh_path, load_textures=False)
+        verts, faces, aux = load_obj_mesh(flame_template_mesh_path)
 
         vertex_uvs = aux.verts_uvs
         face_uvs_idx = faces.textures_idx  # index into verts_uvs
@@ -193,7 +191,12 @@ class FlameHead(nn.Module):
             self.disable_deformation_on_torso(expr_params)
         
         # laplacian matrix
-        laplacian_matrix = Meshes(verts=[self.v_template], faces=[faces.verts_idx]).laplacian_packed().to_dense()
+        laplacian_matrix = uniform_laplacian(
+            self.v_template.shape[0],
+            faces.verts_idx,
+            dtype=self.dtype,
+            device=self.v_template.device,
+        )
         self.register_buffer("laplacian_matrix", laplacian_matrix, persistent=False)
 
         D = torch.diag(laplacian_matrix)

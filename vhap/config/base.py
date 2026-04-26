@@ -92,7 +92,7 @@ class ModelConfig(Config):
 
 @dataclass()
 class RenderConfig(Config):
-    backend: Literal['nvdiffrast', 'pytorch3d'] = 'nvdiffrast'
+    backend: Literal['nvdiffrast'] = 'nvdiffrast'
     """The rendering backend"""
     use_opengl: bool = False
     """Use OpenGL for NVDiffRast"""

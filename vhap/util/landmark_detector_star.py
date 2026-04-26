@@ -126,9 +126,9 @@ class Alignment:
 
             net = utility.get_net(self.config)
             if device_ids == [-1]:
-                checkpoint = torch.load(model_path, map_location="cpu")
+                checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
             else:
-                checkpoint = torch.load(model_path)
+                checkpoint = torch.load(model_path, weights_only=False)
             net.load_state_dict(checkpoint["net"])
             net = net.to(self.config.device_id)
             net.eval()

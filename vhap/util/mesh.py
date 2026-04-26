@@ -7,6 +7,9 @@
 #
 
 
+from types import SimpleNamespace
+
+import numpy as np
 import torch
 
 
@@ -71,3 +74,61 @@ def face_vertices(vertices, faces):
     # pytorch only supports long and byte tensors for indexing
     return vertices[faces.long()]
 
+
+def load_obj_mesh(path):
+    """Load the OBJ data used by FLAME without requiring PyTorch3D."""
+    vertices = []
+    verts_uvs = []
+    faces = []
+    texture_faces = []
+
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("v "):
+                vertices.append([float(x) for x in line.split()[1:4]])
+            elif line.startswith("vt "):
+                verts_uvs.append([float(x) for x in line.split()[1:3]])
+            elif line.startswith("f "):
+                face = []
+                texture_face = []
+                for item in line.split()[1:]:
+                    values = item.split("/")
+                    face.append(int(values[0]) - 1)
+                    if len(values) > 1 and values[1]:
+                        texture_face.append(int(values[1]) - 1)
+                if len(face) != 3:
+                    raise ValueError(f"Only triangular OBJ faces are supported: {line.strip()}")
+                faces.append(face)
+                texture_faces.append(texture_face if texture_face else face)
+
+    verts = torch.tensor(np.asarray(vertices), dtype=torch.float32)
+    verts_idx = torch.tensor(np.asarray(faces), dtype=torch.long)
+    aux = SimpleNamespace(verts_uvs=torch.tensor(np.asarray(verts_uvs), dtype=torch.float32))
+    face_data = SimpleNamespace(
+        verts_idx=verts_idx,
+        textures_idx=torch.tensor(np.asarray(texture_faces), dtype=torch.long),
+    )
+    return verts, face_data, aux
+
+
+def uniform_laplacian(num_verts, faces, dtype=torch.float32, device=None):
+    """Build a dense uniform Laplacian equivalent to PyTorch3D's Meshes helper."""
+    faces = faces.to(device=device, dtype=torch.long)
+    edges = torch.cat(
+        [
+            faces[:, [0, 1]],
+            faces[:, [1, 0]],
+            faces[:, [1, 2]],
+            faces[:, [2, 1]],
+            faces[:, [2, 0]],
+            faces[:, [0, 2]],
+        ],
+        dim=0,
+    ).unique(dim=0)
+
+    laplacian = torch.zeros((num_verts, num_verts), dtype=dtype, device=device)
+    degree = torch.bincount(edges[:, 0], minlength=num_verts).to(dtype=dtype, device=device)
+    weights = torch.where(degree[edges[:, 0]] > 0, 1.0 / degree[edges[:, 0]], 0.0)
+    laplacian[edges[:, 0], edges[:, 1]] = weights
+    laplacian[torch.arange(num_verts, device=device), torch.arange(num_verts, device=device)] = -1.0
+    return laplacian
