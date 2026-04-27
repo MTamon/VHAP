@@ -27,6 +27,15 @@ On top of the original repository, we add support to monocular videos and provid
 git clone git@github.com:ShenhanQian/VHAP.git
 cd VHAP
 
+# Recommended deterministic installer for Python 3.11 + PyTorch 2.9.1 + CUDA 12.8.
+bash setup.sh
+```
+
+The installer pins `torch==2.9.1`, `torchvision==0.24.1`, `numpy==2.2.6`, `chumpy-fork==0.71`, and `protobuf==4.25.5`. It installs pinned packages with `--no-deps`, disables build isolation for the editable install, and pins Git dependencies to commit SHAs so pip does not silently mutate the dependency set. It also runs `download_assets.sh`, which downloads credential-gated FLAME assets when you provide your FLAME account credentials.
+
+Manual installation:
+
+```shell
 conda create --name VHAP -y python=3.11
 conda activate VHAP
 

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata]
@@ -13,29 +13,37 @@ name = "VHAP"
 version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
-    "tyro",
-    "pyyaml",
+    "tyro==0.8.14",
+    "pyyaml==6.0.3",
     "numpy==2.2.6",
-    "matplotlib>=3.10,<3.11",
-    "scipy",
-    "pillow",
-    "opencv-python",
-    "ffmpeg-python",
-    "colour-science",
-    "torch>=2.9,<2.10",  # install from the CUDA 12.8 PyTorch index
-    "torchvision>=0.24,<0.25",  # install from the CUDA 12.8 PyTorch index
-    "tensorboard",
+    "matplotlib==3.10.7",
+    "scipy==1.16.3",
+    "pillow==12.0.0",
+    "opencv-python==4.12.0.88",
+    "ffmpeg-python==0.2.0",
+    "colour-science==0.4.6",
+    "torch==2.9.1",  # install from the CUDA 12.8 PyTorch index
+    "torchvision==0.24.1",  # install from the CUDA 12.8 PyTorch index
+    "protobuf==4.25.5",
+    "tensorboard==2.20.0",
     "chumpy-fork==0.71",
-    "trimesh",
-    "nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@backface-culling",
-    "BackgroundMattingV2@git+https://github.com/ShenhanQian/BackgroundMattingV2",
-    "STAR@git+https://github.com/ShenhanQian/STAR/",
-    "dlib",  # for STAR
-    "pandas",  # for STAR
-    "gdown",  # for STAR
-    "face-alignment",
-    "dearpygui",
-    "joblib"
+    "trimesh==4.8.3",
+    "nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@22718580f24a313c429ba2c304794c264351f108",
+    "BackgroundMattingV2@git+https://github.com/ShenhanQian/BackgroundMattingV2@3df1c506a24865c823ba0f072fec0df885faab53",
+    "STAR@git+https://github.com/ShenhanQian/STAR@be3c8605efb03849c23093f12b9bb87908a7a4d6",
+    "dlib==19.24.6",  # for STAR
+    "python-gflags==3.1.2",  # for STAR
+    "imgaug==0.4.0",  # for STAR
+    "lmdb==1.7.5",  # for STAR
+    "lxml==6.0.2",  # for STAR
+    "imageio==2.37.2",  # for STAR/imgaug
+    "shapely==2.1.2",  # for imgaug
+    "tqdm==4.67.1",
+    "pandas==2.3.3",  # for STAR
+    "gdown==5.2.0",  # for STAR
+    "face-alignment==1.4.1",
+    "dearpygui==1.11.1",
+    "joblib==1.5.2"
 ]
 authors = [
   {name = "Shenhan Qian", email = "shenhan.qian@tum.de"},
