@@ -1,6 +1,6 @@
 # Task Scripts
 
-## `compare_pytorch3d_laplacian.py`
+## `compare_pytorch3d_laplacian.py` -> Verified!
 
 This script verifies whether the local replacement in `vhap.util.mesh` is equivalent to the original PyTorch3D path used by `vhap.model.flame`.
 
