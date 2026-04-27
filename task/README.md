@@ -1,5 +1,49 @@
 # Task Scripts
 
+## `check_pinned_deps.py`
+
+This script smoke-checks the three pinned direct Git dependencies in the ways
+VHAP actually uses them:
+
+- `nvdiffrast`: imports the package and renders a tiny triangle through
+  `vhap.util.render_nvdiffrast.NVDiffRenderer`, including a backward pass.
+- `BackgroundMattingV2`: runs `MattingRefine` on synthetic inputs and performs a
+  TorchScript save/load round-trip.
+- `STAR`: imports STAR/dlib and runs the STAR network forward path on synthetic
+  input. By default it does not download STAR assets.
+
+Run all checks:
+
+```bash
+python task/check_pinned_deps.py
+```
+
+Run individual checks:
+
+```bash
+python task/check_pinned_deps.py --check nvdiffrast
+python task/check_pinned_deps.py --check background-matting-v2 --device cuda
+python task/check_pinned_deps.py --check star --device cuda
+```
+
+To also exercise VHAP's asset-backed STAR detector wrapper, which may download
+the dlib predictor and STAR checkpoint:
+
+```bash
+python task/check_pinned_deps.py --check star --device cuda --star-assets
+```
+
+Exit code `0` means the selected smoke checks passed. Exit code `1` means a
+dependency imported but failed the VHAP-relevant behavior check. Exit code `2`
+means a prerequisite is missing, such as CUDA for `nvdiffrast` or an uninstalled
+direct dependency.
+
+For `BackgroundMattingV2`, this script intentionally distinguishes
+`torch.jit.load` from `torch.load`: `torch.load` has `weights_only`, while
+`torch.jit.load` loads a TorchScript `ScriptModule` and does not expose
+`weights_only`. The check therefore verifies TorchScript compatibility
+separately from eager `state_dict` loading.
+
 ## `compare_pytorch3d_laplacian.py` -> Verified!
 
 This script verifies whether the local replacement in `vhap.util.mesh` is equivalent to the original PyTorch3D path used by `vhap.model.flame`.
