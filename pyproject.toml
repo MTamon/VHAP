@@ -28,9 +28,9 @@ dependencies = [
     "tensorboard==2.20.0",
     "chumpy-fork==0.71",
     "trimesh==4.8.3",
-    "nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@22718580f24a313c429ba2c304794c264351f108",
-    "BackgroundMattingV2@git+https://github.com/ShenhanQian/BackgroundMattingV2@3df1c506a24865c823ba0f072fec0df885faab53",
-    "STAR@git+https://github.com/ShenhanQian/STAR@be3c8605efb03849c23093f12b9bb87908a7a4d6",
+    "nvdiffrast@git+https://github.com/MTamon/nvdiffrast@cuda128-backface-culling",
+    "BackgroundMattingV2@git+https://github.com/MTamon/BackgroundMattingV2@cuda128",
+    "STAR@git+https://github.com/MTamon/STAR@cuda128",
     "dlib==19.24.6",  # for STAR
     "python-gflags==3.1.2",  # for STAR
     "imgaug==0.4.0",  # for STAR

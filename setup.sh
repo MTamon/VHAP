@@ -268,11 +268,11 @@ pip_no_deps pathspec==0.12.1
 pip_no_deps pluggy==1.5.0
 pip_no_deps trove-classifiers==2025.11.14.15
 
-# Git/direct dependencies used by VHAP. These are pinned to immutable commits
-# and installed with --no-deps so upstream branch movement cannot alter the env.
-pip_no_deps "nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@22718580f24a313c429ba2c304794c264351f108"
-pip_no_deps "BackgroundMattingV2@git+https://github.com/ShenhanQian/BackgroundMattingV2@3df1c506a24865c823ba0f072fec0df885faab53"
-pip_no_deps "STAR@git+https://github.com/ShenhanQian/STAR@be3c8605efb03849c23093f12b9bb87908a7a4d6"
+# Git/direct dependencies used by VHAP. These track environment-specific
+# branches in maintained forks instead of immutable commit SHAs.
+pip_no_deps "nvdiffrast@git+https://github.com/MTamon/nvdiffrast@cuda128-backface-culling"
+pip_no_deps "BackgroundMattingV2@git+https://github.com/MTamon/BackgroundMattingV2@cuda128"
+pip_no_deps "STAR@git+https://github.com/MTamon/STAR@cuda128"
 
 echo "[4/5] Installing VHAP in editable mode"
 python -m pip install --no-build-isolation --no-deps -e .

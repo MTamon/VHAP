@@ -498,6 +498,8 @@ class NVDiffRenderer(torch.nn.Module):
         rast_out, rast_out_db = dr.rasterize(self.glctx, verts_clip, tri, image_size)
 
         faces = faces.int()
+        if faces_uv is not None:
+            faces_uv = faces_uv.int()
         fg_mask = torch.clamp(rast_out[..., -1:], 0, 1).bool()
         face_id = torch.clamp(rast_out[..., -1:].long() - 1, 0)  # (B, W, H, 1)
         W, H = face_id.shape[1:3]

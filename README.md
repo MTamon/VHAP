@@ -55,13 +55,13 @@ pip install -e .
 ```
 
 > [!NOTE]
-> - We use an adjusted version of [nvdiffrast](https://github.com/ShenhanQian/nvdiffrast/tree/backface-culling) for backface-culling. If you have other versions installed before, you can reinstall as follows:
+> - We use an adjusted version of [nvdiffrast](https://github.com/MTamon/nvdiffrast/tree/cuda128-backface-culling) for backface-culling and Python 3.11 / PyTorch 2.9 / CUDA 12.8 compatibility. If you have other versions installed before, you can reinstall as follows:
 >    ```shell
->    pip install nvdiffrast@git+https://github.com/ShenhanQian/nvdiffrast@backface-culling --force-reinstall
+>    pip install nvdiffrast@git+https://github.com/MTamon/nvdiffrast@cuda128-backface-culling --force-reinstall
 >    rm -r ~/.cache/torch_extensions/*/nvdiffrast*
 >    ```
 > - For RTX 5090 / CUDA 12.8 environments, install PyTorch from the `cu128` index before `pip install -e .`. This branch removes the runtime dependency on PyTorch3D and uses `chumpy-fork==0.71` with `numpy==2.2.6`.
-> - We use [STAR](https://github.com/ShenhanQian/STAR/) for landmark detection by default. Alterntively, [face-alignment](https://github.com/1adrianb/face-alignment) is faster but less accurate.
+> - We use [STAR](https://github.com/MTamon/STAR/tree/cuda128) for landmark detection by default. Alterntively, [face-alignment](https://github.com/1adrianb/face-alignment) is faster but less accurate.
 
 ## Download
 
