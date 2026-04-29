@@ -31,7 +31,7 @@ cd VHAP
 bash setup.sh
 ```
 
-The installer pins `torch==2.9.1`, `torchvision==0.24.1`, `numpy==2.2.6`, `chumpy-fork==0.71`, and `protobuf==4.25.5`. It installs pinned packages with `--no-deps`, disables build isolation for the editable install, and pins Git dependencies to commit SHAs so pip does not silently mutate the dependency set. It also runs `download_assets.sh`, which downloads credential-gated FLAME assets when you provide your FLAME account credentials.
+The installer pins `torch==2.9.1`, `torchvision==0.24.1`, `numpy==2.2.6`, `chumpy` (mattloper master @ 580566ea, reports version 0.71), and `protobuf==4.25.5`. It installs pinned packages with `--no-deps`, disables build isolation for the editable install, and pins Git dependencies to commit SHAs so pip does not silently mutate the dependency set. It also runs `download_assets.sh`, which downloads credential-gated FLAME assets when you provide your FLAME account credentials.
 
 Manual installation:
 
@@ -60,7 +60,7 @@ pip install -e .
 >    pip install nvdiffrast@git+https://github.com/MTamon/nvdiffrast@cuda128-backface-culling --force-reinstall
 >    rm -r ~/.cache/torch_extensions/*/nvdiffrast*
 >    ```
-> - For RTX 5090 / CUDA 12.8 environments, install PyTorch from the `cu128` index before `pip install -e .`. This branch removes the runtime dependency on PyTorch3D and uses `chumpy-fork==0.71` with `numpy==2.2.6`.
+> - For RTX 5090 / CUDA 12.8 environments, install PyTorch from the `cu128` index before `pip install -e .`. This branch removes the runtime dependency on PyTorch3D and uses `chumpy` (mattloper master pinned to commit `580566ea`, version `0.71`) with `numpy==2.2.6`.
 > - We use [STAR](https://github.com/MTamon/STAR/tree/cuda128) for landmark detection by default. Alterntively, [face-alignment](https://github.com/1adrianb/face-alignment) is faster but less accurate.
 
 ## Download

@@ -26,7 +26,7 @@ dependencies = [
     "torchvision==0.24.1",  # install from the CUDA 12.8 PyTorch index
     "protobuf==4.25.5",
     "tensorboard==2.20.0",
-    "chumpy-fork==0.71",
+    "chumpy@git+https://github.com/mattloper/chumpy.git@580566eafc9ac68b2614b64d6f7aaa84eebb70da",
     "trimesh==4.8.3",
     "nvdiffrast@git+https://github.com/MTamon/nvdiffrast@cuda128-backface-culling",
     "BackgroundMattingV2@git+https://github.com/MTamon/BackgroundMattingV2@cuda128",

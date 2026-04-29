@@ -38,7 +38,6 @@ PYTHON_VERSION="3.11"
 PYTORCH_VERSION="2.9.1"
 TORCHVISION_VERSION="0.24.1"
 NUMPY_VERSION="2.2.6"
-CHUMPY_FORK_VERSION="0.71"
 PROTOBUF_VERSION="4.25.5"
 
 pip_no_deps() {
@@ -104,53 +103,17 @@ pip_no_deps editables==0.6
 # dependency resolution from drifting the CUDA/numpy/chumpy/protobuf stack.
 pip_no_deps "numpy==${NUMPY_VERSION}"
 pip_no_deps "protobuf==${PROTOBUF_VERSION}"
-pip_no_deps "chumpy-fork==${CHUMPY_FORK_VERSION}"
-python - <<'PY'
-from pathlib import Path
-import site
-
-site_packages = Path(site.getsitepackages()[0])
-
-sitecustomize = site_packages / "sitecustomize.py"
-marker = "# VHAP chumpy-fork Python 3.11 compatibility\n"
-snippet = (
-    "\n"
-    + marker
-    + "import inspect\n"
-    + "if not hasattr(inspect, 'getargspec'):\n"
-    + "    inspect.getargspec = inspect.getfullargspec\n"
-)
-if sitecustomize.exists():
-    text = sitecustomize.read_text()
-    if marker not in text:
-        sitecustomize.write_text(text.rstrip() + snippet + "\n")
-else:
-    sitecustomize.write_text(snippet.lstrip())
-
-legacy_module = site_packages / "chumpy.py"
-if legacy_module.exists():
-    legacy_module.unlink()
-
-alias_pkg = site_packages / "chumpy"
-alias_pkg.mkdir(exist_ok=True)
-(alias_pkg / "__init__.py").write_text(
-    "# VHAP compatibility alias for chumpy-fork==0.71\n"
-    "import importlib\n"
-    "import pkgutil\n"
-    "import sys\n"
-    "\n"
-    "_module = importlib.import_module('chumpy_fork')\n"
-    "globals().update(_module.__dict__)\n"
-    "sys.modules[__name__] = _module\n"
-    "for _info in pkgutil.iter_modules(_module.__path__):\n"
-    "    _submodule_name = f'chumpy_fork.{_info.name}'\n"
-    "    _alias_name = f'{__name__}.{_info.name}'\n"
-    "    try:\n"
-    "        sys.modules[_alias_name] = importlib.import_module(_submodule_name)\n"
-    "    except Exception:\n"
-    "        pass\n"
-)
-PY
+# chumpy: install from mattloper master, pinned to a specific SHA where
+# chumpy/version.py reports '0.71'. The PyPI release of mattloper/chumpy
+# (0.70, 2020) is broken under numpy 2.x; the master branch carries the
+# numpy 2 + Python 3.12 fixes. The companion GaussianAvatars cuda128
+# branch pins the same SHA, so both stacks agree on chumpy 0.71 and
+# never contend over site-packages/chumpy/__init__.py.
+#
+# Aug-2025 maintenance commit: "ci: drop Python 2 checks; migrate CI to
+# CircleCI 2.1 + Python 3.12".
+CHUMPY_SHA="580566eafc9ac68b2614b64d6f7aaa84eebb70da"
+pip_no_deps "git+https://github.com/mattloper/chumpy.git@${CHUMPY_SHA}"
 
 # PyTorch 2.9.1 cu128 runtime stack. These pins mirror the CUDA 12.8 wheel
 # dependency set used by the companion HRAvatar installer.
@@ -284,19 +247,22 @@ import torch
 import torchvision
 import google.protobuf
 import chumpy
-import chumpy_fork
 
 print("python ok")
 print("numpy", numpy.__version__)
 print("torch", torch.__version__, "cuda", torch.version.cuda, "available", torch.cuda.is_available())
 print("torchvision", torchvision.__version__)
 print("protobuf", google.protobuf.__version__)
-print("chumpy", getattr(chumpy_fork, "__version__", "unknown"))
+print("chumpy", chumpy.__version__)
 
 assert numpy.__version__ == "2.2.6"
 assert torch.__version__.split("+", 1)[0] == "2.9.1"
 assert torchvision.__version__.split("+", 1)[0] == "0.24.1"
 assert google.protobuf.__version__ == "4.25.5"
+assert chumpy.__version__ == "0.71", \
+    f"chumpy version drift: got {chumpy.__version__}, expected 0.71 (check CHUMPY_SHA)"
+assert hasattr(chumpy, "Ch"), \
+    "chumpy.Ch missing - FLAME pickle deserialisation will fail"
 PY
 
 echo "[5/5] pip check (informational)"
