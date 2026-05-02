@@ -36,6 +36,7 @@ from collections import defaultdict
 from copy import deepcopy
 import time
 import os
+from tqdm import tqdm
 
 
 class FlameTracker:
@@ -1109,7 +1110,12 @@ class FlameTracker:
         self.logger.info("Started Evaluation")
         # vid_frames = []
         photo_loss = []
-        for timestep in range(self.n_timesteps):
+        for timestep in tqdm(
+            range(self.n_timesteps),
+            desc=f"Evaluating (epoch {epoch})",
+            unit="frame",
+            dynamic_ncols=True,
+        ):
 
             sample = self.dataset.getitem_by_timestep(timestep)
             self.clear_cache()
@@ -1382,13 +1388,16 @@ class GlobalTracker(FlameTracker):
         # sequential optimization of timesteps
         self.logger.info(f"Start sequential tracking FLAME in {self.n_timesteps} frames")
         dataloader = DataLoader(
-            self.dataset, 
-            batch_size=self.cfg.batch_size if not self.dataset.batchify_all_views else None, 
-            shuffle=False, 
+            self.dataset,
+            batch_size=self.cfg.batch_size if not self.dataset.batchify_all_views else None,
+            shuffle=False,
             num_workers=4
         )
-        for sample in dataloader:
-            if sample["timestep_index"][0].item() == 0:
+        pbar = tqdm(dataloader, desc="Sequential tracking", unit="frame", dynamic_ncols=True)
+        for sample in pbar:
+            timestep_index = sample["timestep_index"][0].item()
+            pbar.set_postfix(timestep=timestep_index)
+            if timestep_index == 0:
                 self.optimize_stage('lmk_init_rigid', sample)
                 self.optimize_stage('lmk_init_all', sample)
                 if self.cfg.exp.photometric:
@@ -1432,15 +1441,35 @@ class GlobalTracker(FlameTracker):
 
         if sample is not None:
             num_steps = self.cfg.pipeline[stage].num_steps
-            for step_i in range(num_steps):
+            step_pbar = tqdm(
+                range(num_steps),
+                desc=f"  [{stage}]",
+                unit="step",
+                leave=False,
+                dynamic_ncols=True,
+            )
+            for step_i in step_pbar:
                 self.optimize_iter(sample, optimizer, stage)
         else:
             assert dataloader is not None
             num_epochs = self.cfg.pipeline[stage].num_epochs
             scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-            for epoch_i in range(num_epochs):
+            epoch_pbar = tqdm(
+                range(num_epochs),
+                desc=f"[{stage}] epochs",
+                unit="epoch",
+                dynamic_ncols=True,
+            )
+            for epoch_i in epoch_pbar:
                 self.logger.info(f"EPOCH {epoch_i+1} / {num_epochs}")
-                for step_i, sample in enumerate(dataloader):
+                step_pbar = tqdm(
+                    dataloader,
+                    desc=f"  epoch {epoch_i+1}/{num_epochs}",
+                    unit="step",
+                    leave=False,
+                    dynamic_ncols=True,
+                )
+                for step_i, sample in enumerate(step_pbar):
                     self.optimize_iter(sample, optimizer, stage)
                 scheduler.step()
 
