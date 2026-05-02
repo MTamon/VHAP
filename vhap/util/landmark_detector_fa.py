@@ -87,9 +87,9 @@ def detect_dataset(dataset):
         timestep_id = item["timestep_id"][0]
         camera_id = item["camera_id"][0]
         img = item["rgb"][0].numpy()
-        logger.debug(
-            f"Annotate facial landmarks for timestep: {timestep_id}, camera: {camera_id}"
-        )
+        # logger.debug(
+        #     f"Annotate facial landmarks for timestep: {timestep_id}, camera: {camera_id}"
+        # )
         
         bbox, lmks = detector.detect_single_image(img)
         if len(bbox) == 0:
@@ -122,9 +122,9 @@ def detect_dataset_chunk(dataset, chunk_idx, num_chunks):
         timestep_id = item["timestep_id"]
         camera_id = item["camera_id"]
         img = item["rgb"]
-        logger.debug(
-            f"Annotate facial landmarks for timestep: {timestep_id}, camera: {camera_id}"
-        )
+        # logger.debug(
+        #     f"Annotate facial landmarks for timestep: {timestep_id}, camera: {camera_id}"
+        # )
         
         bbox, lmks = detector.detect_single_image(img)
         if len(bbox) == 0:
