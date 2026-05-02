@@ -328,6 +328,20 @@ class BaseTrackingConfig(Config):
     """Allow asynchronous function calls for speed up"""
     device: Literal['cuda', 'cpu'] = 'cuda'
 
+    load_globals_only: bool = False
+    """When True together with model.flame_params_path, only load subject-bound global
+    parameters (shape, lights, focal_length, tex_*, static_offset) and skip per-frame
+    parameters (rotation, translation, neck_pose, jaw_pose, eyes_pose, expr,
+    dynamic_offset). Use this when the npz was produced by a different sequence with
+    a different frame count than the current one."""
+
+    freeze_globals_from_init: bool = False
+    """When True together with model.flame_params_path, the loaded global parameters
+    (cam, shape, texture, lights, static_offset) are frozen during optimization across
+    all stages. Implementation: their keys are stripped from each StageConfig's
+    optimizable_params during __post_init__, and the corresponding tensors are marked
+    with requires_grad_(False) right after loading."""
+
     def get_occluded(self):
         occluded_table = {
         }
@@ -356,6 +370,24 @@ class BaseTrackingConfig(Config):
                 else:
                     print(f'Starting stage: {stage}')
                     break
+
+        if self.freeze_globals_from_init:
+            if self.model.flame_params_path is None:
+                logger.warning(
+                    "freeze_globals_from_init=True but model.flame_params_path is None; "
+                    "global parameters will be frozen at their zero/default initialization."
+                )
+            frozen_keys = ("cam", "shape", "texture", "lights", "static_offset")
+            for stage_name, cfg_stage in self.pipeline.__dict__.items():
+                if not hasattr(cfg_stage, "optimizable_params"):
+                    continue
+                kept = tuple(p for p in cfg_stage.optimizable_params if p not in frozen_keys)
+                if kept != cfg_stage.optimizable_params:
+                    logger.info(
+                        f"freeze_globals_from_init: stage '{stage_name}' "
+                        f"optimizable_params {cfg_stage.optimizable_params} -> {kept}"
+                    )
+                    cfg_stage.optimizable_params = kept
 
 
 if __name__ == "__main__":

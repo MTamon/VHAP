@@ -76,10 +76,15 @@ class FlameTracker:
         else:
             raise NotImplementedError(f"Unknown renderer backend: {self.cfg.render.backend}")
     
-    def load_from_tracked_flame_params(self, fp):
+    def load_from_tracked_flame_params(self, fp, globals_only: bool = False):
         """
         loads checkpoint from tracked_flame_params file. Counterpart to save_result()
-        :param fp:
+        :param fp: path to npz file
+        :param globals_only: if True, only load subject-bound global parameters (shape,
+            lights, focal_length, tex_*, static_offset) and skip per-frame parameters
+            (rotation, translation, neck_pose, jaw_pose, eyes_pose, expr,
+            dynamic_offset). Use this when fp was produced by a different sequence with
+            a different frame count than the current one.
         :return:
         """
         report = np.load(fp)
@@ -92,41 +97,62 @@ class FlameTracker:
             for i in range(min(len(param_list), len(ckpt_array))):
                 load_param(param_list[i], ckpt_array[i])
 
-        load_param_list(self.rotation, report["rotation"])
-        load_param_list(self.translation, report["translation"])
-        load_param_list(self.neck_pose, report["neck_pose"])
-        load_param_list(self.jaw_pose, report["jaw_pose"])
-        load_param_list(self.eyes_pose, report["eyes_pose"])
+        if not globals_only:
+            load_param_list(self.rotation, report["rotation"])
+            load_param_list(self.translation, report["translation"])
+            load_param_list(self.neck_pose, report["neck_pose"])
+            load_param_list(self.jaw_pose, report["jaw_pose"])
+            load_param_list(self.eyes_pose, report["eyes_pose"])
         load_param(self.shape, report["shape"])
-        load_param_list(self.expr, report["expr"])
+        if not globals_only:
+            load_param_list(self.expr, report["expr"])
         load_param(self.lights, report["lights"])
         # self.frame_idx = report["n_processed_frames"]
         if not self.calibrated:
             load_param(self.focal_length, report["focal_length"])
-        
+
         if not self.cfg.model.tex_painted:
             if "tex" in report:
                 load_param(self.tex_pca, report["tex"])
             else:
                 self.logger.warn("No tex_extra found in flame_params!")
-        
+
         if self.cfg.model.tex_extra:
             if "tex_extra" in report:
                 load_param(self.tex_extra, report["tex_extra"])
             else:
                 self.logger.warn("No tex_extra found in flame_params!")
-        
+
         if self.cfg.model.use_static_offset:
             if "static_offset" in report:
                 load_param(self.static_offset, report["static_offset"])
             else:
                 self.logger.warn("No static_offset found in flame_params!")
 
-        if self.cfg.model.use_dynamic_offset:
+        if self.cfg.model.use_dynamic_offset and not globals_only:
             if "dynamic_offset" in report:
                 load_param_list(self.dynamic_offset, report["dynamic_offset"])
             else:
                 self.logger.warn("No dynamic_offset found in flame_params!")
+
+    def freeze_global_tensors(self):
+        """Disable gradient tracking on subject-bound global tensors so they remain
+        at their loaded values throughout optimization. Called after
+        load_from_tracked_flame_params when cfg.freeze_globals_from_init is True.
+        Mirror of the optimizable_params stripping done in
+        BaseTrackingConfig.__post_init__ for keys ('cam', 'shape', 'texture',
+        'lights', 'static_offset')."""
+        self.shape.requires_grad_(False)
+        if self.lights is not None:
+            self.lights.requires_grad_(False)
+        if self.cfg.model.use_static_offset and self.static_offset is not None:
+            self.static_offset.requires_grad_(False)
+        if self.cfg.model.tex_extra:
+            self.tex_extra.requires_grad_(False)
+        if not self.cfg.model.tex_painted:
+            self.tex_pca.requires_grad_(False)
+        if not self.calibrated:
+            self.focal_length.requires_grad_(False)
 
     def trimmed_decays(self, is_init):
         decays = {}
@@ -1258,7 +1284,13 @@ class GlobalTracker(FlameTracker):
         self.init_params()
 
         if self.cfg.model.flame_params_path is not None:
-            self.load_from_tracked_flame_params(self.cfg.model.flame_params_path)
+            self.load_from_tracked_flame_params(
+                self.cfg.model.flame_params_path,
+                globals_only=self.cfg.load_globals_only,
+            )
+
+        if self.cfg.freeze_globals_from_init:
+            self.freeze_global_tensors()
 
     def detect_landmarks(self, cfg):
         cfg_data = deepcopy(cfg.data)
