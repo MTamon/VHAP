@@ -43,6 +43,22 @@ class ColorFormatter(logging.Formatter):
         return prefix + " " + log
 
 
+class TqdmLoggingHandler(logging.StreamHandler):
+    """Logging handler that routes records through tqdm.write so concurrent
+    tqdm progress bars are not broken by interleaved log lines."""
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            from tqdm import tqdm
+            tqdm.write(msg, file=self.stream)
+            self.flush()
+        except RecursionError:
+            raise
+        except Exception:
+            self.handleError(record)
+
+
 def get_logger(name, level=logging.DEBUG, root=False, log_dir=None):
     """
     Replaces the standard library logging.getLogger call in order to make some configuration
@@ -58,8 +74,8 @@ def get_logger(name, level=logging.DEBUG, root=False, log_dir=None):
     logger.setLevel(level)
 
     if root:
-        # create handler for console
-        console_handler = logging.StreamHandler(sys.stdout)
+        # create handler for console (tqdm-aware so progress bars stay intact)
+        console_handler = TqdmLoggingHandler(sys.stdout)
         console_handler.setLevel(level)
         formatter = ColorFormatter(_colored("[%(asctime)s %(name)s]: ", "green") + "%(message)s",
                                    datefmt="%m/%d %H:%M:%S")
