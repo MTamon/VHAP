@@ -87,7 +87,7 @@ def detect_dataset(dataset):
         timestep_id = item["timestep_id"][0]
         camera_id = item["camera_id"][0]
         img = item["rgb"][0].numpy()
-        logger.info(
+        logger.debug(
             f"Annotate facial landmarks for timestep: {timestep_id}, camera: {camera_id}"
         )
         
@@ -112,7 +112,7 @@ def detect_dataset_chunk(dataset, chunk_idx, num_chunks):
     landmarks = {}
     bboxes = {}
     item_inds = list(range(chunk_idx, len(dataset), num_chunks))
-    for item_idx in tqdm(item_inds):
+    for item_idx in item_inds:
         item = dataset[item_idx]
         if item is None:
             bbox = np.zeros(5) - 1
@@ -122,10 +122,9 @@ def detect_dataset_chunk(dataset, chunk_idx, num_chunks):
         timestep_id = item["timestep_id"]
         camera_id = item["camera_id"]
         img = item["rgb"]
-        logger.info(
+        logger.debug(
             f"Annotate facial landmarks for timestep: {timestep_id}, camera: {camera_id}"
         )
-        sys.stdout.flush()
         
         bbox, lmks = detector.detect_single_image(img)
         if len(bbox) == 0:
@@ -151,7 +150,7 @@ def annotate_landmarks(dataset, n_jobs=1):
     os.umask(0o002)
 
     if n_jobs > 1:
-        with tqdm_joblib(tqdm(desc="Progress", total=len(dataset))) as progress_bar:
+        with tqdm_joblib(tqdm(desc="Landmark chunks", total=n_jobs)) as progress_bar:
             out = Parallel(n_jobs=n_jobs)(
                 delayed(detect_dataset_chunk)(dataset, chunk_idx, n_jobs) for chunk_idx in range(n_jobs)
             )
